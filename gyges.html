@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GYGES — You Don't Have to Be Seen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#070B14;
+    --text:#D8DEEC;
+    --text-dim:#8A93AC;
+    --rec:#FF3B30;
+    --line:rgba(216,222,236,.14);
+    --cream:#E8E5DA;
+    --paper-ink:#201D16;
+    --paper-dim:#6F6A5D;
+    --paper-line:rgba(32,29,22,.14);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--ink);
+    color:var(--text);
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    overflow-x:hidden;
+  }
+
+  /* ---------- Scroll stage: hero pins across all three acts ---------- */
+  .stage{height:620vh;position:relative}
+  .hero{position:sticky;top:0;height:100vh;min-height:560px;width:100%;overflow:hidden}
+  #glass{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+
+  .scrims{position:absolute;inset:0;pointer-events:none;z-index:1;transition:opacity .4s ease}
+  .scrims::before,.scrims::after{content:"";position:absolute;left:0;right:0;height:22%}
+  .scrims::before{top:0;background:linear-gradient(to bottom,rgba(7,11,20,.7),transparent)}
+  .scrims::after{bottom:0;background:linear-gradient(to top,rgba(7,11,20,.78),transparent)}
+
+  .hud{position:absolute;inset:0;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:28px 32px;z-index:2}
+
+  .hud-top{display:flex;justify-content:space-between;align-items:flex-start;
+    font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.08em;color:var(--text-dim)}
+  .rec{display:flex;align-items:center;gap:8px;color:var(--text)}
+  .rec-dot{width:8px;height:8px;border-radius:50%;background:var(--rec);
+    box-shadow:0 0 10px var(--rec);animation:blink 1.6s steps(2,start) infinite}
+  @keyframes blink{50%{opacity:.15}}
+  .coords{text-align:right;line-height:1.7}
+
+  .hud-bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+  .reveal-late{opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s ease}
+  .reveal-late.on{opacity:1;transform:none}
+  .tagline{max-width:40ch;font-size:15px;line-height:1.6;color:var(--text-dim)}
+  .tagline strong{color:var(--text);font-weight:500}
+
+  .scroll-note{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;color:var(--text);
+    display:flex;align-items:center;gap:10px;transition:opacity .4s ease}
+  .scroll-note .bar{width:1px;height:34px;background:var(--text-dim);position:relative;overflow:hidden}
+  .scroll-note .bar::after{content:"";position:absolute;left:0;top:-40%;width:100%;height:40%;
+    background:var(--text);animation:drip 1.6s ease-in-out infinite}
+  @keyframes drip{to{top:110%}}
+
+  /* ---------- Act 3: the serif artwork ---------- */
+  .art{position:absolute;inset:0;z-index:2;display:grid;place-items:center;
+    pointer-events:none;opacity:0;padding:0 24px}
+  .art p{font-family:'Instrument Serif',Georgia,serif;font-weight:400;
+    font-size:clamp(44px,8vw,104px);line-height:1.06;letter-spacing:-.01em;
+    color:var(--paper-ink);text-align:center}
+  .art p em{font-style:italic}
+
+  /* ---------- Manifesto: the calm after ---------- */
+  .manifesto{background:var(--cream);color:var(--paper-ink);
+    padding:120px 32px 130px}
+  .manifesto .inner{max-width:720px;margin:0 auto}
+  .manifesto h2{font-family:'Instrument Serif',Georgia,serif;font-weight:400;
+    font-size:clamp(38px,6vw,64px);line-height:1.05;letter-spacing:-.01em;
+    margin-bottom:40px}
+  .manifesto p{font-size:17px;line-height:1.75;color:var(--paper-dim);
+    max-width:56ch;margin-bottom:26px}
+  .manifesto .answer{color:var(--paper-ink)}
+  .manifesto .answer strong{font-weight:500;letter-spacing:.02em}
+  .manifesto .kicker{font-family:'Space Mono',monospace;font-size:12px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--paper-ink);
+    display:flex;align-items:center;gap:10px;margin:44px 0 0;max-width:none}
+  .kicker-dot{width:7px;height:7px;border-radius:50%;background:var(--rec);
+    box-shadow:0 0 8px var(--rec);flex:none}
+
+  /* ---------- Waitlist ---------- */
+  .waitlist{margin-top:54px;max-width:480px}
+  .wl-row{display:flex;border-bottom:1px solid var(--paper-ink)}
+  .wl-input{flex:1;min-width:0;background:none;border:none;outline:none;
+    font-family:'Space Mono',monospace;font-size:14px;color:var(--paper-ink);
+    padding:13px 0;letter-spacing:.02em}
+  .wl-input::placeholder{color:var(--paper-dim);opacity:.65}
+  .wl-btn{background:var(--paper-ink);color:var(--cream);border:none;
+    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;padding:0 22px;cursor:pointer;transition:opacity .2s ease}
+  .wl-btn:hover{opacity:.82}
+  .wl-btn:disabled{opacity:.4;cursor:default}
+  .wl-hp{position:absolute;left:-9999px;width:0;height:0;opacity:0}
+  .manifesto .wl-msg{font-family:'Space Mono',monospace;font-size:12px;
+    letter-spacing:.06em;min-height:18px;margin:14px 0 0;color:var(--paper-dim)}
+  .manifesto .wl-msg.ok{color:var(--paper-ink)}
+  .manifesto .wl-msg.err{color:var(--rec)}
+
+  footer{background:var(--cream);color:var(--paper-dim);
+    padding:28px 32px;border-top:1px solid var(--paper-line);
+    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.08em}
+
+  @media (max-width:640px){
+    .hud{padding:20px}
+    .coords{display:none}
+    .hero{min-height:480px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .rec-dot,.scroll-note .bar::after{animation:none}
+    .stage{height:auto}
+    .hero{position:relative}
+    .reveal-late{opacity:1;transform:none}
+    .art{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <section class="hero">
+    <canvas id="glass" aria-label="Scroll story: you are being watched — then footage — then: you don't have to be seen"></canvas>
+
+    <div class="scrims" id="scrims"></div>
+
+    <div class="hud">
+      <div class="hud-top" id="hudTop">
+        <div class="rec"><span class="rec-dot"></span><span>REC&nbsp;&nbsp;<span id="timecode">00:00:00:00</span></span></div>
+        <div class="coords">
+          SUBJECT&nbsp;LOCK&nbsp;·&nbsp;ACTIVE<br>
+          X&nbsp;<span id="cx">0000</span>&nbsp;&nbsp;Y&nbsp;<span id="cy">0000</span>
+        </div>
+      </div>
+
+      <div class="hud-bottom">
+        <div class="reveal-late" id="lateBlock">
+          <p class="tagline"><strong>You just want to live your life</strong> — but you're on camera right now. You didn't agree to it, and you can't opt out.</p>
+        </div>
+        <span class="scroll-note" id="scrollNote"><span class="bar"></span>SCROLL</span>
+      </div>
+    </div>
+
+    <div class="art" id="art">
+      <p>You don't have to<br>be <em>seen</em>.</p>
+    </div>
+  </section>
+</div>
+
+<section class="manifesto">
+  <div class="inner">
+    <h2>Nobody asked for this.</h2>
+    <p>Cameras got cheap, glasses got cameras, and recognition software got good enough to put a name to your face from across the street. The result is a world where walking outside means entering someone's dataset.</p>
+    <p class="answer"><strong>Gyges</strong> is our answer: a wearable that keeps you out of it. Quiet, passive, indistinguishable from an ordinary accessory.</p>
+    <form class="waitlist" id="wlForm" autocomplete="off" novalidate>
+      <div class="wl-row">
+        <input class="wl-input" id="wlEmail" name="email" type="email"
+          placeholder="you@somewhere.quiet" aria-label="Email address" required>
+        <button class="wl-btn" id="wlBtn" type="submit">Join</button>
+      </div>
+      <input class="wl-hp" name="website" type="text" tabindex="-1" aria-hidden="true">
+      <p class="wl-msg" id="wlMsg" role="status"></p>
+    </form>
+
+    <p class="kicker"><span class="kicker-dot"></span><span><span id="wlCount">00000</span> on the list · first units ship in list order.</span></p>
+  </div>
+</section>
+
+<footer>GYGES © 2026 · YOU DON'T HAVE TO BE SEEN.</footer>
+
+<script>
+(() => {
+  const VIDEO_SRC  = "gyges_watch.mp4";
+  const VIDEO2_SRC  = "gyges_reveal.mp4";   // scroll-scrubbed, never self-playing
+
+  const canvas = document.getElementById('glass');
+  const gl = canvas.getContext('webgl', {antialias:false, alpha:false});
+  if (!gl) { canvas.replaceWith(Object.assign(document.createElement('h1'),{textContent:'YOU ARE BEING WATCHED',style:'display:grid;place-items:center;height:100%;font-family:Anton;font-size:12vw'})); return; }
+
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- Shaders ---------- */
+  const vsrc = `
+    attribute vec2 a;
+    void main(){ gl_Position = vec4(a,0.,1.); }`;
+
+  const fsrc = `
+    precision highp float;
+    uniform vec2  u_res;
+    uniform float u_time;
+    uniform vec2  u_mouse;
+    uniform float u_motion;
+    uniform sampler2D u_text;   // R/G/B: one headline line per channel
+    uniform sampler2D u_video;
+    uniform sampler2D u_video2;
+    uniform float u_hasVid;
+    uniform float u_hasVid2;
+    uniform float u_vidAspect;
+    uniform float u_vid2Aspect;
+    uniform float u_vidMix;     // 0 = act-1 loop, 1 = scroll-scrubbed footage
+    uniform vec3  u_lineRev;    // per-line reveal (melt drives these back down)
+    uniform float u_form;       // overall formedness: wobble surges when low
+    uniform float u_dim;        // greyscale + dim surroundings
+    uniform float u_melt;       // dissolve: refraction flares as letters liquify
+    uniform float u_cream;      // act 3: wash the frame to paper
+
+    float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
+
+    vec3 blob(vec2 p, vec2 c, float r, vec3 col){
+      float d = length(p - c);
+      return col * exp(-(d*d) / (r*r));
+    }
+
+    float heightAt(vec2 tuv){
+      vec3 t = texture2D(u_text, tuv).rgb;
+      return dot(t, u_lineRev);
+    }
+
+    vec2 coverUV(vec2 uv, float aspect){
+      float sa = u_res.x / u_res.y;
+      vec2 v = uv - 0.5;
+      if (sa > aspect) v.y *= aspect / sa;
+      else             v.x *= sa / aspect;
+      return clamp(v + 0.5, 0.001, 0.999);
+    }
+
+    vec3 videoAt(vec2 uv){
+      /* Act-1 loop wears the surveillance grade; the scrub film is untouched */
+      vec3 a = texture2D(u_video,  coverUV(uv, u_vidAspect )).rgb;
+      a = pow(a, vec3(1.06));
+      a *= vec3(0.86, 0.90, 1.02) * 0.88;
+      vec3 b = texture2D(u_video2, coverUV(uv, u_vid2Aspect)).rgb;
+      float m = u_vidMix * u_hasVid2;
+      return mix(a, b, m);
+    }
+
+    vec3 background(vec2 uv){
+      vec2 p = uv; p.x *= u_res.x / u_res.y;
+      float t = u_time * u_motion;
+      vec3 col;
+
+      if (u_hasVid > 0.5){
+        col = videoAt(uv);
+      } else {
+        col = mix(vec3(0.027,0.043,0.078), vec3(0.047,0.078,0.141), uv.y);
+        col += blob(p, vec2(0.35*u_res.x/u_res.y + 0.13*sin(t*0.21), 0.72 + 0.09*cos(t*0.17)), 0.55, vec3(0.16,0.11,0.55) * 0.85);
+        col += blob(p, vec2(0.72*u_res.x/u_res.y + 0.16*cos(t*0.16), 0.38 + 0.11*sin(t*0.23)), 0.50, vec3(0.05,0.38,0.36) * 0.80);
+        col += blob(p, vec2(0.50*u_res.x/u_res.y + 0.20*sin(t*0.11), 0.55 + 0.14*cos(t*0.13)), 0.42, vec3(0.42,0.24,0.10) * 0.55);
+      }
+
+      /* searchlight, grain and vignette belong to the surveillance act —
+         they retire as the clean footage takes over, and fully on paper */
+      float clean = max(u_vidMix, u_cream);
+      vec2 m = u_mouse; m.x *= u_res.x / u_res.y;
+      col += vec3(0.55,0.60,0.75) * 0.13 * (1.0 - clean) * exp(-pow(length(p - m), 2.0) / 0.06);
+
+      col += (hash(uv * u_res + fract(t)) - 0.5) * 0.03 * (1.0 - clean);
+      col *= 1.0 - 0.42 * pow(length(uv - 0.5), 1.9) * (1.0 - clean);
+      return col;
+    }
+
+    void main(){
+      vec2 uv = gl_FragCoord.xy / u_res;
+
+      vec2 par = (u_mouse - 0.5) * -0.016;
+      float wobAmt = 0.0016 * (1.0 + 3.0 * (1.0 - u_form)) * u_motion;
+      vec2 wob = wobAmt * vec2(
+        sin(uv.y*34.0 + u_time*1.1) + sin(uv.y*13.0 - u_time*0.7),
+        cos(uv.x*30.0 - u_time*0.9) + cos(uv.x*11.0 + u_time*0.6));
+      vec2 tuv = uv + par + wob;
+
+      float e = 1.4 / u_res.y;
+      float h  = heightAt(tuv);
+      float hx = heightAt(tuv + vec2(e,0.)) - heightAt(tuv - vec2(e,0.));
+      float hy = heightAt(tuv + vec2(0.,e)) - heightAt(tuv - vec2(0.,e));
+      vec3 n = normalize(vec3(-hx, -hy, 0.075));
+
+      /* coverage: tight edge = readable letterforms; height still soft for lighting */
+      float cov = smoothstep(0.11, 0.17, h);
+
+      float sh = heightAt(tuv + vec2(0.006, 0.020));
+      vec3 bg = background(uv);
+
+      float luma = dot(bg, vec3(0.299, 0.587, 0.114));
+      vec3 mono = vec3(luma) * vec3(0.92, 0.96, 1.05);
+      bg = mix(bg, mono, 0.9 * u_dim);
+      bg *= 1.0 - 0.42 * u_dim;
+
+      bg *= 1.0 - 0.55 * smoothstep(0.05, 0.5, sh) * (1.0 - cov);
+
+      /* refraction flares while the letters melt away */
+      float k = 0.10 * (1.0 + 1.6 * u_melt);
+      vec2 refr = n.xy * k * (0.85 + 0.15 * h);
+      vec3 glass;
+      glass.r = background(uv + refr * 1.18).r;
+      glass.g = background(uv + refr        ).g;
+      glass.b = background(uv + refr * 0.82).b;
+      glass = glass * 1.38 + 0.07;
+
+      vec2 mAsp = (u_mouse - uv) * vec2(u_res.x / u_res.y, 1.0);
+      vec3 L = normalize(vec3(mAsp, 0.55));
+      vec3 Hv = normalize(L + vec3(0.,0.,1.));
+      glass += vec3(1.0, 0.98, 0.92) * pow(max(dot(n, Hv), 0.0), 60.0) * 1.3;
+
+      float fr = pow(1.0 - abs(n.z), 2.5);
+      vec3 irid = 0.5 + 0.5 * cos(6.2831 * (dot(n.xy, vec2(2.6, 1.9)) + u_mouse.x * 0.6) + vec3(0.0, 2.1, 4.2));
+      glass += irid * fr * 0.7;
+
+      float edge = cov * (1.0 - cov) * 4.0;
+      glass *= 1.0 - 0.22 * edge;
+
+      glass *= 0.85 + 0.3 * h;
+      glass *= 1.0 + 0.18 * u_dim;
+
+      vec3 col = mix(bg, glass, cov);
+
+      /* Act 3: the frame becomes paper. Grain-dithered so the wash feels printed. */
+      vec3 paper = vec3(0.910, 0.898, 0.855);
+      float wash = clamp(u_cream + (hash(uv * u_res) - 0.5) * 0.10 * u_cream * (1.0 - u_cream) * 4.0, 0.0, 1.0);
+      col = mix(col, paper, wash);
+
+      gl_FragColor = vec4(col, 1.0);
+    }`;
+
+  function compile(type, src){
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, vsrc));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fsrc));
+  gl.linkProgram(prog); gl.useProgram(prog);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, 'a');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+  const U = n => gl.getUniformLocation(prog, n);
+  const uRes = U('u_res'), uTime = U('u_time'), uMouse = U('u_mouse'), uMotion = U('u_motion'),
+        uHasVid = U('u_hasVid'), uVidAspect = U('u_vidAspect'),
+        uLineRev = U('u_lineRev'), uForm = U('u_form'), uDim = U('u_dim'),
+        uMelt = U('u_melt'), uCream = U('u_cream'),
+        uHasVid2 = U('u_hasVid2'), uVid2Aspect = U('u_vid2Aspect'), uVidMix = U('u_vidMix');
+  gl.uniform1i(U('u_text'), 0);
+  gl.uniform1i(U('u_video'), 1);
+  gl.uniform1i(U('u_video2'), 2);
+
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+  /* ---------- Text height map: one line per RGB channel (unit 0) ---------- */
+  const textTex = gl.createTexture();
+  const tcan = document.createElement('canvas');
+  const tctx = tcan.getContext('2d');
+
+  function drawTextTexture(w, h){
+    tcan.width = w; tcan.height = h;
+    tctx.fillStyle = '#000'; tctx.fillRect(0, 0, w, h);
+
+    const lines = ['YOU ARE', 'BEING', 'WATCHED'];
+    const chans = ['#f00', '#0f0', '#00f'];
+    tctx.textAlign = 'center'; tctx.textBaseline = 'alphabetic';
+
+    let size = h / 4;
+    tctx.font = `400 ${size}px Anton, Impact, 'Arial Black', sans-serif`;
+    const widest = Math.max(...lines.map(l => tctx.measureText(l).width));
+    size *= (w * 0.86) / widest;
+    const maxByHeight = (h * 0.84) / (lines.length * 0.92);
+    size = Math.min(size, maxByHeight);
+    tctx.font = `400 ${size}px Anton, Impact, 'Arial Black', sans-serif`;
+
+    const lineH = size * 0.98;
+    const blockH = lineH * lines.length;
+    let y = (h - blockH) / 2 + size * 0.82;
+
+    tctx.globalCompositeOperation = 'lighter';
+    tctx.filter = `blur(${Math.max(3, size * 0.045)}px)`;
+    lines.forEach((l, i) => {
+      tctx.fillStyle = chans[i];
+      tctx.fillText(l, w/2, y); y += lineH;
+    });
+    tctx.filter = 'none';
+    tctx.globalCompositeOperation = 'source-over';
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, textTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, tcan);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  }
+
+  /* ---------- Video texture (unit 1) ---------- */
+  const vidTex = gl.createTexture();
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, vidTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, new Uint8Array([10,14,24]));
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  const video = document.createElement('video');
+  video.muted = true; video.loop = true; video.playsInline = true;
+  video.setAttribute('playsinline',''); video.preload = 'auto';
+  video.src = VIDEO_SRC;
+
+  let hasVid = false;
+  function tryPlay(){ video.play().catch(()=>{}); }
+  video.addEventListener('canplay', () => {
+    hasVid = true;
+    gl.uniform1f(uVidAspect, video.videoWidth / video.videoHeight);
+    if (!reduceMotion) tryPlay();
+    else video.currentTime = 0.1;
+  }, {once:true});
+  video.load();
+  addEventListener('pointerdown', tryPlay, {once:true});
+
+  function uploadVideoFrame(){
+    if (!hasVid || video.readyState < 2) return;
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, vidTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, video);
+  }
+
+  /* ---------- Second video: scroll-scrubbed only, never plays (unit 2) ---------- */
+  const vid2Tex = gl.createTexture();
+  gl.activeTexture(gl.TEXTURE2);
+  gl.bindTexture(gl.TEXTURE_2D, vid2Tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, new Uint8Array([10,14,24]));
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+  const video2 = document.createElement('video');
+  video2.muted = true; video2.playsInline = true;
+  video2.setAttribute('playsinline',''); video2.preload = 'auto';
+  video2.src = VIDEO2_SRC;
+
+  let hasVid2 = false;
+  video2.addEventListener('canplay', () => {
+    hasVid2 = true;
+    gl.uniform1f(uVid2Aspect, video2.videoWidth / video2.videoHeight);
+    video2.currentTime = 0.001;   // park on first frame; playback never starts
+  }, {once:true});
+  video2.load();
+
+  function uploadVideo2Frame(){
+    if (!hasVid2 || video2.readyState < 2) return;
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, vid2Tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, video2);
+  }
+
+  /* ---------- Sizing ---------- */
+  function resize(){
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    const w = Math.round(canvas.clientWidth * dpr);
+    const h = Math.round(canvas.clientHeight * dpr);
+    if (w === canvas.width && h === canvas.height) return;
+    canvas.width = w; canvas.height = h;
+    gl.viewport(0, 0, w, h);
+    drawTextTexture(Math.min(w, 1600), Math.min(h, 1600 * h / w | 0 || h));
+  }
+  addEventListener('resize', resize);
+
+  /* ---------- Scroll ---------- */
+  const stage = document.querySelector('.stage');
+  const lateBlock = document.getElementById('lateBlock');
+  const scrollNote = document.getElementById('scrollNote');
+  const hudTop = document.getElementById('hudTop');
+  const scrims = document.getElementById('scrims');
+  const art = document.getElementById('art');
+  let progress = 0, progressSm = reduceMotion ? 0.45 : 0;
+
+  const ease = t => t < .5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;
+  const seg = (t, a, b) => Math.min(Math.max((t - a) / (b - a), 0), 1);
+
+  function readScroll(){
+    const rect = stage.getBoundingClientRect();
+    const total = stage.offsetHeight - innerHeight;
+    progress = total > 0 ? Math.min(Math.max(-rect.top / total, 0), 1) : 1;
+  }
+  addEventListener('scroll', readScroll, {passive:true});
+  readScroll();
+
+  /* ---------- Cursor + HUD readout ---------- */
+  let mx = .5, my = .55, tx = .5, ty = .55;
+  const cx = document.getElementById('cx'), cy = document.getElementById('cy');
+  const hero = document.querySelector('.hero');
+  let lastPointer = 0;
+  hero.addEventListener('pointermove', e => {
+    const r = canvas.getBoundingClientRect();
+    tx = (e.clientX - r.left) / r.width;
+    ty = 1 - (e.clientY - r.top) / r.height;
+    cx.textContent = String(Math.round(e.clientX)).padStart(4, '0');
+    cy.textContent = String(Math.round(e.clientY)).padStart(4, '0');
+    lastPointer = performance.now();
+  });
+
+  /* ---------- Timecode ---------- */
+  const tcEl = document.getElementById('timecode');
+  const t0 = Date.now();
+  setInterval(() => {
+    const ms = Date.now() - t0;
+    const f = String(Math.floor(ms / 40) % 25).padStart(2, '0');
+    const s = String(Math.floor(ms / 1e3) % 60).padStart(2, '0');
+    const m = String(Math.floor(ms / 6e4) % 60).padStart(2, '0');
+    const hrs = String(Math.floor(ms / 36e5)).padStart(2, '0');
+    tcEl.textContent = `${hrs}:${m}:${s}:${f}`;
+  }, 120);
+
+  /* ---------- Render loop: the three-act choreography ---------- */
+  const motion = reduceMotion ? 0 : 1;
+
+  function frame(t){
+    resize();
+    if (motion && performance.now() - lastPointer > 4000){
+      tx = .5 + .28 * Math.sin(t * 0.00021);
+      ty = .55 + .18 * Math.cos(t * 0.00017);
+    }
+    mx += (tx - mx) * 0.07;
+    my += (ty - my) * 0.07;
+
+    progressSm += (progress - progressSm) * (motion ? 0.09 : 1);
+    const p = progressSm;
+    const R = (a, b) => ease(seg(p, a, b));
+
+    /* Act 1 — crystallize + drain */
+    const c1 = R(0.05, 0.19), c2 = R(0.13, 0.27), c3 = R(0.21, 0.36);
+    let dim = R(0.08, 0.36);
+
+    /* Dissolve — letters melt, staggered; color floods back */
+    const m1 = R(0.50, 0.60), m2 = R(0.53, 0.63), m3 = R(0.56, 0.66);
+    const r1 = c1 * (1 - m1), r2 = c2 * (1 - m2), r3 = c3 * (1 - m3);
+    const melt = m2;
+    dim *= 1 - R(0.50, 0.64);
+    const form = (r1 + r2 + r3) / 3;
+
+    /* Act 2 — second film is bound to the scroll: it advances only as you scroll */
+    const vidMix = ease(seg(p, 0.50, 0.64));   // melt doubles as the crossfade
+    const scrub = ease(seg(p, 0.52, 0.90));
+    if (hasVid2 && motion && isFinite(video2.duration)){
+      const target = Math.max(0.001, scrub * Math.max(video2.duration - 0.06, 0));
+      if (Math.abs(video2.currentTime - target) > 1/48) video2.currentTime = target;
+    }
+    /* act-1 loop rests once it's fully hidden; wakes if you scroll back */
+    if (hasVid && motion){
+      if (vidMix >= 1 && !video.paused) video.pause();
+      else if (vidMix < 1 && video.paused && p < 0.66) tryPlay();
+    }
+
+    /* Act 3 — the frame becomes paper; the serif line rises */
+    const cream = ease(seg(p, 0.84, 0.97));
+    const artIn = ease(seg(p, 0.90, 0.99));
+    art.style.opacity = artIn;
+    art.style.transform = `translateY(${(1 - artIn) * 26}px)`;
+
+    /* HUD choreography */
+    lateBlock.classList.toggle('on', p > 0.38 && p < 0.52);
+    scrollNote.style.opacity = p > 0.30 ? 0 : 1;
+    const hudFade = 1 - ease(seg(p, 0.78, 0.90));
+    hudTop.style.opacity = hudFade;
+    scrims.style.opacity = 1 - cream;
+
+    uploadVideoFrame();
+    uploadVideo2Frame();
+
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.uniform1f(uTime, t * 0.001);
+    gl.uniform2f(uMouse, mx, my);
+    gl.uniform1f(uMotion, motion);
+    gl.uniform1f(uHasVid, hasVid ? 1 : 0);
+    gl.uniform1f(uHasVid2, hasVid2 ? 1 : 0);
+    gl.uniform1f(uVidMix, vidMix);
+    gl.uniform3f(uLineRev, r1, r2, r3);
+    gl.uniform1f(uForm, form);
+    gl.uniform1f(uDim, dim);
+    gl.uniform1f(uMelt, melt * (1 - melt) * 4);   // flare peaks mid-melt
+    gl.uniform1f(uCream, cream);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, textTex);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    if (motion) requestAnimationFrame(frame);
+  }
+
+  function start(){
+    resize();
+    if (motion) requestAnimationFrame(frame);
+    else {
+      /* reduced motion: fully-formed crystal, static; acts 2–3 skipped */
+      frame(0);
+      setTimeout(() => { drawTextTexture(tcan.width, tcan.height); uploadVideoFrame(); frame(0); }, 800);
+    }
+  }
+  if (document.fonts && document.fonts.load){
+    document.fonts.load("400 100px Anton").then(() => {
+      start();
+      setTimeout(() => { drawTextTexture(tcan.width, tcan.height); }, 100);
+    }).catch(start);
+  } else start();
+})();
+</script>
+
+<script>
+/* ---------- Waitlist: Supabase REST, no client library ---------- */
+(() => {
+  /* Paste from your Supabase project: Settings → API keys */
+  const SUPABASE_URL = "https://igpwclurmbkvhgpfsmta.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_CW3iZ-luJyB-zNMiyP9T8w_ulUXnk3r";
+  const configured = !SUPABASE_URL.startsWith("YOUR_");
+
+  const form = document.getElementById('wlForm');
+  const email = document.getElementById('wlEmail');
+  const btn = document.getElementById('wlBtn');
+  const msg = document.getElementById('wlMsg');
+  const countEl = document.getElementById('wlCount');
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const headers = {
+    apikey: SUPABASE_KEY,
+    'Content-Type': 'application/json'
+  };
+
+  /* ---- live counter: rpc + gentle count-up ---- */
+  let shown = null;
+  const render = n => { countEl.textContent = String(n).padStart(5, '0'); };
+
+  function setCount(n){
+    if (!Number.isFinite(n)) return;
+    if (shown === null || reduceMotion || n < shown){ shown = n; render(n); return; }
+    const from = shown, t0 = performance.now(), dur = 900;
+    shown = n;
+    (function tick(t){
+      const k = Math.min((t - t0) / dur, 1);
+      render(Math.round(from + (n - from) * (1 - Math.pow(1 - k, 3))));
+      if (k < 1) requestAnimationFrame(tick);
+    })(t0);
+  }
+
+  async function fetchCount(){
+    if (!configured) return;
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/waitlist_count`, {
+        method: 'POST', headers, body: '{}'
+      });
+      if (r.ok) setCount(parseInt(await r.text(), 10));
+    } catch {}
+  }
+  fetchCount();
+  setInterval(() => { if (!document.hidden) fetchCount(); }, 20000);
+  addEventListener('visibilitychange', () => { if (!document.hidden) fetchCount(); });
+
+  /* ---- signup ---- */
+  const say = (text, cls) => { msg.textContent = text; msg.className = 'wl-msg' + (cls ? ' ' + cls : ''); };
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const addr = email.value.trim().toLowerCase();
+    if (form.website.value){ say("You're in.", 'ok'); return; }   /* honeypot: silently drop */
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(addr)){ say('That address doesn’t parse.', 'err'); return; }
+    if (!configured){ say('The list opens soon.', ''); return; }
+
+    btn.disabled = true; say('…', '');
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/waitlist`, {
+        method: 'POST',
+        headers: { ...headers, Prefer: 'return=minimal' },
+        body: JSON.stringify({ email: addr })
+      });
+      if (r.status === 201){
+        say("You're in. We'll be quiet about it.", 'ok');
+        form.reset();
+        if (shown !== null) setCount(shown + 1);
+        fetchCount();
+      } else if (r.status === 409){
+        say('Already on the list.', 'ok');
+      } else {
+        say('Something failed. Try again.', 'err');
+      }
+    } catch {
+      say('Network refused. Try again.', 'err');
+    }
+    btn.disabled = false;
+  });
+})();
+</script>
+</body>
+</html>
